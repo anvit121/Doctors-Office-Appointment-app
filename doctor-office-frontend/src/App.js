@@ -1,37 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+const API_URL = '<BACKEND URL>';
+
 function App() {
   const [appointments, setAppointments] = useState([]);
   const [form, setForm] = useState({ patientName: '', doctorName: '', date: '' });
-  const baseUrl = 'http://a0f108ccf3a7c4eafa7445cf7f2601c7-1257704000.us-east-1.elb.amazonaws.com/appointments';
 
   useEffect(() => {
     fetchAppointments();
   }, []);
 
   const fetchAppointments = () => {
-    fetch(baseUrl)
+    fetch(`${API_URL}/appointments`)
       .then((res) => res.json())
       .then((data) => setAppointments(data));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetch(baseUrl, {
+    fetch(`${API_URL}/appointments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Failed to create appointment');
+        }
+        return res.json();
+      })
+
       .then((newAppointment) => {
         setAppointments([...appointments, newAppointment]);
         setForm({ patientName: '', doctorName: '', date: '' });
+      })
+      .catch((error) => {
+        console.error('Error:', error); // Log error for debugging
       });
   };
 
   const handleDelete = (appointmentId) => {
-    fetch(`${baseUrl}/${appointmentId}`, {
+    fetch(`${API_URL}/appointments/${appointmentId}`, {
       method: 'DELETE',
     })
       .then((res) => {
@@ -40,7 +50,7 @@ function App() {
         }
       });
   };
-
+  
   return (
     <div className="app">
       <header className="header">

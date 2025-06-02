@@ -5,7 +5,7 @@ metadata:
   labels:
     app: frontend
 spec:
-  replicas: 1
+  replicas: 2  # Increased the replicas for better fault tolerance
   selector:
     matchLabels:
       app: frontend
@@ -16,15 +16,25 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: 474668414952.dkr.ecr.us-east-1.amazonaws.com/doctor-office-frontend
+          image: <ECR REPO>/doctor-office-frontend
           resources:
             requests:
-              cpu: "0.3"            
-              memory: "200Mi"
+              cpu: "0.1"  
+              memory: "100Mi"
             limits:
-              cpu: "0.7"            
-              memory: "200Mi" 
+              cpu: "0.3"  # Balanced  the CPU usage to avoid overcommitment
+              memory: "200Mi"  # Increased the memory limit for burst traffic
           ports:
-          - containerPort: 3000
-          
-             
+            - containerPort: 3000
+          readinessProbe:  # Added readiness probe for better health monitoring
+            httpGet:
+              path: "/health"
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:  # Added liveness probe to ensure container health
+            httpGet:
+              path: "/health"
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
