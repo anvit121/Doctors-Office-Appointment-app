@@ -5,7 +5,12 @@ const AWS = require('aws-sdk');
 
 
 const app = express();
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+  origin: '<BACKEND URL>',
+  methods: ['GET', 'POST', 'DELETE'],
+}));
+
 app.use(express.json());
 
 // Configure AWS
@@ -13,6 +18,17 @@ AWS.config.update({
   region: process.env.AWS_REGION,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
+
+if (!process.env.AWS_REGION || !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+  console.error('Missing required AWS environment variables');
+  process.exit(1); // Exit the app if critical variables are missing
+}
+
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
 });
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
